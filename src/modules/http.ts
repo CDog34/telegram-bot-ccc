@@ -1,6 +1,8 @@
 import { IncomingHttpHeaders } from 'http'
-import { request, RequestOptions } from 'https'
+import { get, request, RequestOptions } from 'https'
 import { config } from '../config'
+import { access, createWriteStream, mkdir, unlink } from 'fs'
+import { promisify } from 'util'
 
 export interface IRequestOptions {
   [key: string]: string | number
@@ -12,44 +14,22 @@ export interface IHttpRawResponse {
   data: string
 }
 
-export abstract class Http {
-  private static _getTelegramApiUrl (appKey: string,
-                                     methodName: string,
-                                     options: { [key: string]: string | number } = {}
-  ): string {
-    return `https://api.telegram.org/bot${appKey}/${methodName}?${Object.keys(options)
-        .map(key => `${key}=${options[key]}`)
-        .join('&')}`
-  }
 
-  private static _doRequest (url, options: RequestOptions = {}): Promise<IHttpRawResponse> {
-    return new Promise<IHttpRawResponse>((resolve, reject) => {
-      const req = request(url, options)
-      const responseEventHandler = res => {
-        let dataChunk = ''
-        const resChunkHandler = (chunk) => dataChunk += chunk
-        res.setTimeout(0)
-        res.setEncoding('utf8')
-        res.once('error', (e) => {
-          res.off('data', resChunkHandler)
-          reject(e)
+export abstract class Http {
+  public static downloadFile (url: string, localFilePath: string) {
+    return new Promise((resolve, reject) => {
+      const file = createWriteStream(localFilePath)
+      const req = get(url, (res) => {
+        res.pipe(file)
+        file.once('finish', () => {
+          file.close()
+          resolve()
         })
-        res.on('data', resChunkHandler)
-        res.once('end', () => {
-          res.off('data', resChunkHandler)
-          resolve({
-            statusCode: res.statusCode,
-            headers: res.headers,
-            data: dataChunk
-          })
-        })
-      }
-      req.once('response', responseEventHandler)
-      req.once('error', (e) => {
-        req.off('response', responseEventHandler)
-        reject(e)
       })
-      req.end()
+      req.once('error', (e) => {
+        unlink(localFilePath, () => reject(e))
+
+      })
     })
   }
 
@@ -89,5 +69,45 @@ export abstract class Http {
       throw new Error('Telegram business fail: ' + data.data)
     }
     return dataObj.result
+  }
+
+  private static _getTelegramApiUrl (appKey: string,
+                                     methodName: string,
+                                     options: { [key: string]: string | number } = {}
+  ): string {
+    return `https://api.telegram.org/bot${appKey}/${methodName}?${Object.keys(options)
+        .map(key => `${key}=${options[key]}`)
+        .join('&')}`
+  }
+
+  private static _doRequest (url, options: RequestOptions = {}): Promise<IHttpRawResponse> {
+    return new Promise<IHttpRawResponse>((resolve, reject) => {
+      const req = request(url, options)
+      const responseEventHandler = res => {
+        let dataChunk = ''
+        const resChunkHandler = (chunk) => dataChunk += chunk
+        res.setTimeout(0)
+        res.setEncoding('utf8')
+        res.once('error', (e) => {
+          res.off('data', resChunkHandler)
+          reject(e)
+        })
+        res.on('data', resChunkHandler)
+        res.once('end', () => {
+          res.off('data', resChunkHandler)
+          resolve({
+            statusCode: res.statusCode,
+            headers: res.headers,
+            data: dataChunk
+          })
+        })
+      }
+      req.once('response', responseEventHandler)
+      req.once('error', (e) => {
+        req.off('response', responseEventHandler)
+        reject(e)
+      })
+      req.end()
+    })
   }
 }
