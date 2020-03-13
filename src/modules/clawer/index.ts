@@ -27,7 +27,7 @@ export async function getTwitterStatusImages (url: string): Promise<string[]> {
         const targetTweet = json['globalObjects'].tweets[id]
         const media = targetTweet.entities.media
         const result: string[] = media
-            .filter(item => item.media_url)
+            .filter(item => item.media_url_https)
             .map(item => `${item.media_url}?name=orig`)
         resolve(result)
       } catch (e) {
