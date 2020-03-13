@@ -4,7 +4,7 @@ import { join } from 'path'
 import { Http } from '../../modules/http'
 import { promisify } from 'util'
 import { access, mkdir } from 'fs'
-import { getTwitterStatusImages } from 'src/modules/clawer'
+import { getTwitterStatusImages } from '../../modules/clawer'
 
 export async function handlePhoto (photos) {
   if (!photos || !photos.length) {

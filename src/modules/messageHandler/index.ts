@@ -1,6 +1,6 @@
 import { config } from '../../config'
 import { downloadImageFileById, downloadTwitterImages, handlePhoto } from './photo'
-import { twitterStatusRegExp } from 'src/modules/clawer'
+import { twitterStatusRegExp } from '../../modules/clawer'
 
 export async function handleSingleMessage (msgWrapper): Promise<number> {
   const { update_id, message } = msgWrapper
