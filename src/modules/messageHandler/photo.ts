@@ -51,7 +51,10 @@ async function chkAndMkDir (dir: string) {
 
 export async function downloadTwitterImages (url) {
   try {
-    const imgs = await getTwitterStatusImages(url)
+    let imgs = []
+    await callWithRetry(async () => {
+      imgs = await getTwitterStatusImages(url)
+    })
     if (!imgs || !imgs.length) {
       return
     }

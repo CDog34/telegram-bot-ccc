@@ -14,7 +14,11 @@ export async function getTwitterStatusImages (url: string): Promise<string[]> {
   }
   const p = await browser.newPage()
   let resolve
-  const pro = new Promise<string[]>(res => resolve = res)
+  let reject
+  const pro = new Promise<string[]>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
   const timeout = setTimeout(async () => {
     await p.close()
     resolve([])
@@ -33,7 +37,7 @@ export async function getTwitterStatusImages (url: string): Promise<string[]> {
         resolve(result)
       } catch (e) {
         console.warn(e)
-        resolve([])
+        reject(e)
       }
       await p.close()
     }
