@@ -4,6 +4,7 @@ import { join } from 'path'
 import { Http } from '../../modules/http'
 import { promisify } from 'util'
 import { access, mkdir } from 'fs'
+import { getTwitterStatusImages } from 'src/modules/clawer'
 
 export async function handlePhoto (photos) {
   if (!photos || !photos.length) {
@@ -55,5 +56,42 @@ async function chkAndMkDir (dir: string) {
     await promisify(access)(dir)
   } catch (e) {
     await promisify(mkdir)(dir, { recursive: true })
+  }
+}
+
+export async function downloadTwitterImages (url) {
+  try {
+    const imgs = await getTwitterStatusImages(url)
+    if (!imgs || !imgs.length) {
+      return
+    }
+    return await Promise.all(imgs.map(i => downloadTwitterImage(i)))
+  } catch (e) {
+    console.warn(e)
+  }
+
+}
+
+
+async function downloadTwitterImage (targetUrl) {
+  const url = new URL(targetUrl)
+  const localDir = join(config.fileStoragePrefix, 'tg-bot', 'image')
+  await chkAndMkDir(localDir)
+  const pathArr = url.pathname.split('/')
+  const localPath = join(localDir, `twi_${pathArr[pathArr.length - 1]}`)
+  let isSucceed = false
+  let tryCount = 0
+  while (!isSucceed) {
+    try {
+      console.log(`Saving file ${targetUrl} to ${localPath}.`)
+      await Http.downloadFile(targetUrl, localPath)
+      isSucceed = true
+    } catch (e) {
+      tryCount++
+      if (tryCount >= config.apiRetryLimit) {
+        throw e
+      }
+      console.warn(`Request to ${targetUrl} fail. Retrying (${tryCount}/${config.apiRetryLimit})`)
+    }
   }
 }

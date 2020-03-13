@@ -1,4 +1,4 @@
-FROM node:13-alpine3.10
+FROM hub.tuku.tech/node-pptr:85389ff
 
 # Create app directory
 WORKDIR /data/app
