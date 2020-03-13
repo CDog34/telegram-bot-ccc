@@ -5,7 +5,7 @@ import { Http } from '../../modules/http'
 import { promisify } from 'util'
 import { access, mkdir } from 'fs'
 import { getTwitterStatusImages } from '../../modules/clawer'
-import { callWithRetry } from 'src/utils'
+import { callWithRetry } from '../../utils'
 
 export async function handlePhoto (photos) {
   if (!photos || !photos.length) {

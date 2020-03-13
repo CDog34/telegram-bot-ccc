@@ -1,7 +1,7 @@
 import { get as httpGet, IncomingHttpHeaders } from 'http'
 import { get, request, RequestOptions } from 'https'
 import { createWriteStream, unlink } from 'fs'
-import { callWithRetry } from 'src/utils'
+import { callWithRetry } from '../utils'
 
 export interface IRequestOptions {
   [key: string]: string | number
