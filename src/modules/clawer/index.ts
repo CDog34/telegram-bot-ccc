@@ -42,7 +42,9 @@ export async function getTwitterStatusImages (url: string): Promise<string[]> {
       await p.close()
     }
   })
-  await p.goto(url)
+  const urlObj = new URL(url)
+  urlObj.search=''
+  await p.goto(urlObj.href)
 
   return pro
 }
