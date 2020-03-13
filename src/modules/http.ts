@@ -1,8 +1,7 @@
-import { IncomingHttpHeaders } from 'http'
+import { get as httpGet, IncomingHttpHeaders } from 'http'
 import { get, request, RequestOptions } from 'https'
 import { config } from '../config'
-import { access, createWriteStream, mkdir, unlink } from 'fs'
-import { promisify } from 'util'
+import { createWriteStream, unlink } from 'fs'
 
 export interface IRequestOptions {
   [key: string]: string | number
@@ -18,8 +17,10 @@ export interface IHttpRawResponse {
 export abstract class Http {
   public static downloadFile (url: string, localFilePath: string) {
     return new Promise((resolve, reject) => {
+      const urlObj = new URL(url)
+      const handleFunction = urlObj.protocol.indexOf('https') !== -1 ? get : httpGet
       const file = createWriteStream(localFilePath)
-      const req = get(url, (res) => {
+      const req = handleFunction(url, (res) => {
         res.pipe(file)
         file.once('finish', () => {
           file.close()
