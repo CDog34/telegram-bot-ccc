@@ -29,6 +29,7 @@ export async function getTwitterStatusImages (url: string): Promise<string[]> {
         const result: string[] = media
             .filter(item => item.media_url_https || item.media_url)
             .map(item => `${item.media_url_https || item.media_url}?name=orig`)
+        console.log('Get twitter images:', result)
         resolve(result)
       } catch (e) {
         console.warn(e)

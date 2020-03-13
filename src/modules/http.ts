@@ -1,7 +1,7 @@
 import { get as httpGet, IncomingHttpHeaders } from 'http'
 import { get, request, RequestOptions } from 'https'
-import { config } from '../config'
 import { createWriteStream, unlink } from 'fs'
+import { callWithRetry } from 'src/utils'
 
 export interface IRequestOptions {
   [key: string]: string | number
@@ -39,24 +39,16 @@ export abstract class Http {
       throw new Error('Invalid AppKey!')
     }
     const url = this._getTelegramApiUrl(appKey, methodName, options)
-    let triedTimes = 0
-    let isSucceed = false
-    let data
-    while (!isSucceed) {
-      try {
-        data = await this._doRequest(
-            url,
-            httpOptions || {}
-        )
-        isSucceed = true
-      } catch (e) {
-        triedTimes++
-        if (triedTimes >= config.apiRetryLimit) {
-          throw e
-        }
-        console.warn(`Request to ${url} fail. Retrying (${triedTimes}/${config.apiRetryLimit})`)
+    let data = {} as IHttpRawResponse
+    await callWithRetry(async ({ current, limit }) => {
+      if (current > 1) {
+        console.log(`Calling ${url}. (${current}/${limit})`)
       }
-    }
+      data = await this._doRequest(
+          url,
+          httpOptions || {}
+      )
+    })
     if (data.statusCode !== 200) {
       throw new Error('Server return invalid status code: ' + data.statusCode + '\n' + data.data)
     }

@@ -5,6 +5,7 @@ import { Http } from '../../modules/http'
 import { promisify } from 'util'
 import { access, mkdir } from 'fs'
 import { getTwitterStatusImages } from '../../modules/clawer'
+import { callWithRetry } from 'src/utils'
 
 export async function handlePhoto (photos) {
   if (!photos || !photos.length) {
@@ -34,21 +35,10 @@ async function downloadImage (targetUrl) {
   const localDir = join(config.fileStoragePrefix, 'tg-bot', 'image')
   await chkAndMkDir(localDir)
   const localPath = join(localDir, `${config.appKey.substr(-8)}_${urlPath[urlPath.length - 1]}`)
-  let isSucceed = false
-  let tryCount = 0
-  while (!isSucceed) {
-    try {
-      console.log(`Saving file ${targetUrl} to ${localPath}.`)
-      await Http.downloadFile(targetUrl, localPath)
-      isSucceed = true
-    } catch (e) {
-      tryCount++
-      if (tryCount >= config.apiRetryLimit) {
-        throw e
-      }
-      console.warn(`Request to ${targetUrl} fail. Retrying (${tryCount}/${config.apiRetryLimit})`)
-    }
-  }
+  await callWithRetry(async ({ current, limit }) => {
+    console.log(`Saving file ${targetUrl} to ${localPath}. (${current}/${limit})`)
+    await Http.downloadFile(targetUrl, localPath)
+  })
 }
 
 async function chkAndMkDir (dir: string) {
@@ -79,19 +69,9 @@ async function downloadTwitterImage (targetUrl) {
   await chkAndMkDir(localDir)
   const pathArr = url.pathname.split('/')
   const localPath = join(localDir, `twi_${pathArr[pathArr.length - 1]}`)
-  let isSucceed = false
-  let tryCount = 0
-  while (!isSucceed) {
-    try {
-      console.log(`Saving file ${targetUrl} to ${localPath}.`)
-      await Http.downloadFile(targetUrl, localPath)
-      isSucceed = true
-    } catch (e) {
-      tryCount++
-      if (tryCount >= config.apiRetryLimit) {
-        throw e
-      }
-      console.warn(`Request to ${targetUrl} fail. Retrying (${tryCount}/${config.apiRetryLimit})`)
-    }
-  }
+  await callWithRetry(async ({ current, limit }) => {
+    console.log(`Saving file ${targetUrl} to ${localPath}. (${current}/${limit})`)
+    await Http.downloadFile(targetUrl, localPath)
+  })
+
 }
