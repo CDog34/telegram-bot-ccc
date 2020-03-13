@@ -10,7 +10,7 @@ export async function getTwitterStatusImages (url: string): Promise<string[]> {
   }
   const id = match[1]
   if (!browser) {
-    browser = await launch()
+    browser = await launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-extensions', '--disable-dev-shm-usage', '--disable-gpu'] })
   }
   const p = await browser.newPage()
   let resolve
