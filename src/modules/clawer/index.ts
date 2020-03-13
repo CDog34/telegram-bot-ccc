@@ -20,7 +20,7 @@ export async function getTwitterStatusImages (url: string): Promise<string[]> {
     resolve([])
   }, 60000)
   p.on('response', async res => {
-    if (res.url().indexOf(`${id}.json`) && res.request().method() === 'GET') {
+    if (res.url().indexOf(`${id}.json`) !== -1 && res.request().method() === 'GET') {
       try {
         const json = await res.json()
         clearTimeout(timeout)
