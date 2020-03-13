@@ -10,13 +10,17 @@ export async function handlePhoto (photos) {
     return
   }
   const photo = photos.reduce((pi, ci) => pi.width > ci.width ? pi : ci)
-  const file = await handleSinglePhoto(photo.file_id)
-  downloadImage(file).catch(console.error)
+  downloadImageFileById(photo.file_id).catch(console.error)
 }
 
-async function handleSinglePhoto (photoId: string) {
+export async function downloadImageFileById (fileId: string) {
+  const file = await getDownloadUrl(fileId)
+  await downloadImage(file)
+}
+
+async function getDownloadUrl (fileId: string): Promise<string> {
   try {
-    const file = await Api.getFile({ fileId: photoId })
+    const file = await Api.getFile({ fileId })
     return `https://api.telegram.org/file/bot${config.appKey}/${file.file_path}`
   } catch (e) {
     console.error('getFileError', e)
