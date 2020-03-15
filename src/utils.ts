@@ -17,6 +17,7 @@ export async function callWithRetry<T> (
       result = await executor({ current: tryCount, limit: retryTimes })
       isSucceed = true
     } catch (e) {
+      console.warn('Error Occur:', e)
       if (tryCount >= config.apiRetryLimit) {
         throw e
       }
