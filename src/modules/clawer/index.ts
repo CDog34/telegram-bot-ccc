@@ -2,6 +2,9 @@ import { Browser, launch } from 'puppeteer'
 
 let browser: Browser = null
 export const twitterStatusRegExp = /twitter.com\/.+\/status\/(\d+)/
+export const pixivUrlArtworkRegExp = /pixiv.net\/artworks\/(\d+)/
+export const pixivUrlIRegExp = /pixiv.net\/i\/(\d+)/
+export const pixivHashTagRegExp = /#pixiv id=(\d+)/
 
 export async function getTwitterStatusImages (url: string): Promise<string[]> {
   const match = url.match(twitterStatusRegExp)
