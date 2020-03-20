@@ -7,14 +7,16 @@ export async function handleSingleMessage (msgWrapper): Promise<number> {
   if (!message) {
     return update_id
   }
-  const { from, photo, document, text } = message
+  const { from, photo, document, text, caption } = message
 
   const isDocumentImage = document && document.mime_type.indexOf('image/') === 0
 
   if (!from || from.id !== config.myId) {
     return update_id
   }
-  if (text && getPixivId(text)) {
+  if (caption && getPixivId(caption)) {
+    await HandlePixivImage(caption)
+  } else if (text && getPixivId(text)) {
     await HandlePixivImage(text)
   } else if (twitterStatusRegExp.test(text)) {
     await handleTwitterImages(text)
