@@ -18,6 +18,7 @@ async function main () {
     }
     await loopCallUpdate(nextId)
   }
+  console.log('Server Start.')
   await loopCallUpdate(0)
 }
 
