@@ -20,5 +20,3 @@ With the `Cloud Station` app on the `DS718+`, I can upload these images to `OneD
 
 If you have any idea, feel free to start an `issue` or `pull request`.
 
-## TODO
-+ Support downloading images from pixiv.
