@@ -1,5 +1,5 @@
 import { get as httpGet, IncomingHttpHeaders } from 'http'
-import { get, request, RequestOptions } from 'https'
+import { get, RequestOptions } from 'https'
 import { createWriteStream, unlink } from 'fs'
 import { callWithRetry } from '../utils'
 
@@ -15,12 +15,12 @@ export interface IHttpRawResponse {
 
 
 export abstract class Http {
-  public static downloadFile (url: string, localFilePath: string) {
+  public static downloadFile (url: string, localFilePath: string, referer: string = '') {
     return new Promise((resolve, reject) => {
       const urlObj = new URL(url)
       const handleFunction = urlObj.protocol.indexOf('https') !== -1 ? get : httpGet
       const file = createWriteStream(localFilePath)
-      const req = handleFunction(url, (res) => {
+      const req = handleFunction(url, { headers: { referer } }, (res) => {
         res.pipe(file)
         file.once('finish', () => {
           file.close()
@@ -29,7 +29,6 @@ export abstract class Http {
       })
       req.once('error', (e) => {
         unlink(localFilePath, () => reject(e))
-
       })
     })
   }
@@ -64,6 +63,15 @@ export abstract class Http {
     return dataObj.result
   }
 
+  public static browserGet (url, options: RequestOptions = {}): Promise<IHttpRawResponse> {
+    const finalOptions = Object.assign<{}, RequestOptions, RequestOptions>({}, {
+      headers: {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'
+      }
+    }, options)
+    return this._doRequest(url, finalOptions)
+  }
+
   private static _getTelegramApiUrl (appKey: string,
                                      methodName: string,
                                      options: { [key: string]: string | number } = {}
@@ -75,7 +83,9 @@ export abstract class Http {
 
   private static _doRequest (url, options: RequestOptions = {}): Promise<IHttpRawResponse> {
     return new Promise<IHttpRawResponse>((resolve, reject) => {
-      const req = request(url, options)
+      const urlObj = new URL(url)
+      const handleFunction = urlObj.protocol.indexOf('https') !== -1 ? get : httpGet
+      const req = handleFunction(url, options)
       const responseEventHandler = res => {
         let dataChunk = ''
         const resChunkHandler = (chunk) => dataChunk += chunk

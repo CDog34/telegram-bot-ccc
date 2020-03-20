@@ -6,6 +6,25 @@ export const pixivUrlArtworkRegExp = /pixiv.net\/artworks\/(\d+)/
 export const pixivUrlIRegExp = /pixiv.net\/i\/(\d+)/
 export const pixivHashTagRegExp = /#pixiv id=(\d+)/
 
+const pixivRegExps = [
+  pixivUrlArtworkRegExp,
+  pixivUrlIRegExp,
+  pixivHashTagRegExp
+]
+
+export function getPixivId (data: string): number {
+  let id = 0
+  pixivRegExps.some(regExp => {
+    const match = data.match(regExp)
+    if (match && match.length > 1) {
+      id = parseInt(match[1], 0)
+      return true
+    }
+    return false
+  })
+  return id
+}
+
 export async function getTwitterStatusImages (url: string): Promise<string[]> {
   const match = url.match(twitterStatusRegExp)
   if (!match || match.length < 2) {
@@ -46,7 +65,7 @@ export async function getTwitterStatusImages (url: string): Promise<string[]> {
     }
   })
   const urlObj = new URL(url)
-  urlObj.search=''
+  urlObj.search = ''
   await p.goto(urlObj.href)
 
   return pro
