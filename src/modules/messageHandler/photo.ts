@@ -70,7 +70,8 @@ async function getTelegramDownloadUrl (fileId: string): Promise<string> {
 }
 
 async function downloadImage (targetUrl, filenamePrefix: string = config.appKey.substr(-8), referer: string = '') {
-  const urlPath = targetUrl.split('/')
+  const url = new URL(targetUrl)
+  const urlPath = url.pathname.split('/')
   const localDir = join(config.fileStoragePrefix, 'tg-bot', 'image')
   await chkAndMkDir(localDir)
   const localPath = join(localDir, `${filenamePrefix}_${urlPath[urlPath.length - 1]}`)
