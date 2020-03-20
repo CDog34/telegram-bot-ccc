@@ -14,7 +14,7 @@ export async function handleSingleMessage (msgWrapper): Promise<number> {
   if (!from || from.id !== config.myId) {
     return update_id
   }
-  if (getPixivId(text)) {
+  if (text && getPixivId(text)) {
     await HandlePixivImage(text)
   } else if (twitterStatusRegExp.test(text)) {
     await handleTwitterImages(text)
