@@ -34,24 +34,33 @@ export async function handleTwitterImages (message: string) {
 export async function HandlePixivImage (message: string) {
   try {
     const id = getPixivId(message)
-    const url = await callWithRetry<string>(() => getPixivImageUrl(id))
-    if (!url) {
+    const url = await callWithRetry<string[]>(() => getPixivImageUrl(id))
+    if (!url.length) {
       console.warn('Empty Pixiv image url for: ' + message)
       return
     }
-    await downloadPixivImage(url, `https://pixiv.net/i/${id}`)
+    await Promise.all(url.map(item => downloadPixivImage(item, `https://pixiv.net/i/${id}`)))
   } catch (e) {
     console.warn(e)
   }
 }
 
-export async function getPixivImageUrl (id: number) {
+export async function getPixivImageUrl (id: number): Promise<string[]> {
   const { statusCode, data } = await Http.browserGet(`https://www.pixiv.net/ajax/illust/${id}`)
   if (statusCode !== 200) {
     throw new Error('Pixiv Server return code: ' + statusCode)
   }
   const json = JSON.parse(data)
-  return json.body.urls.original
+  const originalUrl = json.body.urls.original
+  const pageCount = json.body.pageCount || 0
+  const res = []
+  if (!originalUrl || !pageCount) {
+    return res
+  }
+  for (let i = 0; i < pageCount; i++) {
+    res[i] = originalUrl.replace(/(.*_p)\d+(\.\w+$)/, `$1${i}$2`)
+  }
+  return res
 }
 
 export async function downloadTelegramImageFileById (fileId: string) {
