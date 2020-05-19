@@ -1,6 +1,9 @@
 import { config } from '../../config'
 import { downloadTelegramImageFileById, HandlePixivImage, handleTelegramPhoto, handleTwitterImages } from './photo'
 import { getPixivId, twitterStatusRegExp } from '../../modules/clawer'
+import { AsyncQueue } from 'src/modules/asyncQueue'
+
+const asyncQueue = new AsyncQueue()
 
 export async function handleSingleMessage (msgWrapper): Promise<number> {
   const { update_id, message } = msgWrapper
@@ -16,13 +19,13 @@ export async function handleSingleMessage (msgWrapper): Promise<number> {
     return update_id
   }
   if (urlText && getPixivId(urlText)) {
-    await HandlePixivImage(urlText)
+    asyncQueue.addTask(() => HandlePixivImage(urlText))
   } else if (twitterStatusRegExp.test(urlText)) {
-    await handleTwitterImages(urlText)
+    asyncQueue.addTask(() => handleTwitterImages(urlText))
   } else if (isDocumentImage) {
-    await downloadTelegramImageFileById(document.file_id)
+    asyncQueue.addTask(() => downloadTelegramImageFileById(document.file_id))
   } else if (photo) {
-    await handleTelegramPhoto(photo)
+    asyncQueue.addTask(() => handleTelegramPhoto(photo))
   } else {
     console.log(message)
   }
