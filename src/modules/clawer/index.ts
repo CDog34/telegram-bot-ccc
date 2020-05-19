@@ -78,7 +78,7 @@ export async function getTwitterStatusImages (url: string): Promise<string[]> {
         console.log('Get twitter images:', result)
         resolve(result)
       } catch (e) {
-        console.warn(e)
+        console.warn(`Data grab fail for (${p.url()}) failed: `, e)
         reject(e)
       }
       await p.close()
