@@ -1,6 +1,7 @@
 import { Browser, launch } from 'puppeteer'
 
 let browser: Browser = null
+let browserCloseTimeoutTimer = null
 export const twitterStatusRegExp = /twitter.com\/.+\/status\/(\d+)/
 export const pixivUrlArtworkRegExp = /pixiv.net\/artworks\/(\d+)/
 export const pixivUrlIRegExp = /pixiv.net\/i\/(\d+)/
@@ -25,31 +26,50 @@ export function getPixivId (data: string): number {
   return id
 }
 
+function closeBrowser () {
+  clearTimeout(browserCloseTimeoutTimer)
+  browserCloseTimeoutTimer = setTimeout(async () => {
+    await browser.close()
+    browser = null
+  }, 60000)
+}
+
+async function createBrowser () {
+  clearTimeout(browserCloseTimeoutTimer)
+  if (!browser) {
+    browser = await launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-extensions', '--disable-dev-shm-usage', '--disable-gpu'] })
+  }
+}
+
 export async function getTwitterStatusImages (url: string): Promise<string[]> {
   const match = url.match(twitterStatusRegExp)
   if (!match || match.length < 2) {
     return []
   }
   const id = match[1]
-  if (!browser) {
-    browser = await launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-extensions', '--disable-dev-shm-usage', '--disable-gpu'] })
-  }
+  await createBrowser()
   const p = await browser.newPage()
   let resolve
   let reject
   const pro = new Promise<string[]>((res, rej) => {
-    resolve = res
-    reject = rej
+    resolve = (...args) => {
+      closeBrowser()
+      res.apply(null, args)
+    }
+    reject = (...args) => {
+      closeBrowser()
+      rej.apply(null, args)
+    }
   })
-  const timeout = setTimeout(async () => {
+  const timeoutTimer = setTimeout(async () => {
     await p.close()
     resolve([])
   }, 60000)
   p.on('response', async res => {
     if (res.url().indexOf(`${id}.json`) !== -1 && res.request().method() === 'GET') {
+      clearTimeout(timeoutTimer)
       try {
         const json = await res.json()
-        clearTimeout(timeout)
         const targetTweet = json['globalObjects'].tweets[id]
         const media = targetTweet.entities.media
         const result: string[] = media
@@ -63,6 +83,12 @@ export async function getTwitterStatusImages (url: string): Promise<string[]> {
       }
       await p.close()
     }
+  })
+  p.on('error', async e => {
+    console.error('PPTR Error:', e)
+    clearTimeout(timeoutTimer)
+    await p.close()
+    reject(e)
   })
   const urlObj = new URL(url)
   urlObj.search = ''

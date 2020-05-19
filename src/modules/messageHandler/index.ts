@@ -1,7 +1,7 @@
 import { config } from '../../config'
 import { downloadTelegramImageFileById, HandlePixivImage, handleTelegramPhoto, handleTwitterImages } from './photo'
 import { getPixivId, twitterStatusRegExp } from '../../modules/clawer'
-import { AsyncQueue } from 'src/modules/asyncQueue'
+import { AsyncQueue } from '../asyncQueue'
 
 const asyncQueue = new AsyncQueue()
 
