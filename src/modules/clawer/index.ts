@@ -90,9 +90,20 @@ export async function getTwitterStatusImages (url: string): Promise<string[]> {
     await p.close()
     reject(e)
   })
-  const urlObj = new URL(url)
-  urlObj.search = ''
-  await p.goto(urlObj.href)
+  try {
+    const urlObj = new URL(url)
+    urlObj.search = ''
+    await p.goto(urlObj.href)
+  } catch (e) {
+    console.error('Open page fail: ', e)
+    clearTimeout(timeoutTimer)
+    try {
+      await p.close()
+    } catch (e) {
+      // pass
+    }
+    reject(e)
+  }
 
   return pro
 }
